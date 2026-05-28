@@ -1,0 +1,1 @@
+venv\Scripts\python main.py compare --name "Home" --figma figma_Home.png --web web_Home.png

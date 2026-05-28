@@ -1,0 +1,7 @@
+# Dependencies list
+google-genai
+pillow
+opencv-python
+scikit-image
+imagehash
+pydantic-settings
