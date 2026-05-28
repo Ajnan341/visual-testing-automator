@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Testing UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #22263a;
+            --border: #2e3250;
+            --text: #e2e8f0;
+            --muted: #8892b0;
+            --accent: #6c63ff;
+            --accent-hover: #5a52d5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1d27 0%, #12142a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #a78bfa, #6c63ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        p { color: var(--muted); }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .dropzone {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: var(--surface2);
+        }
+
+        .dropzone input[type="file"] { display: none; }
+        .dropzone .icon { font-size: 2rem; margin-bottom: 12px; }
+        .dropzone .filename { margin-top: 10px; font-size: 0.85rem; color: var(--accent); font-weight: 500;}
+
+        .btn-analyze {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-bottom: 40px;
+        }
+
+        .btn-analyze:hover { background: var(--accent-hover); }
+        .btn-analyze:disabled { background: var(--border); cursor: not-allowed; color: var(--muted); }
+
+        /* Loader */
+        .loader {
+            display: none;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--surface2);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Results Area */
+        .results {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .image-comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .image-comparison-grid img {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 8px;
+        }
+        .image-comparison-grid h4 {
+            color: var(--muted);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Markdown Styles */
+        .md-content h1, .md-content h2, .md-content h3 { margin: 24px 0 16px; color: #fff; }
+        .md-content h2 { border-bottom: 1px solid var(--border); padding-bottom: 8px; font-size: 1.4rem; }
+        .md-content p { color: var(--text); line-height: 1.6; margin-bottom: 16px; }
+        .md-content ul, .md-content ol { margin-left: 20px; margin-bottom: 16px; color: var(--text); line-height: 1.6; }
+        .md-content li { margin-bottom: 8px; }
+        .md-content strong { color: #fff; font-weight: 600; }
+        .md-content hr { border: none; height: 1px; background: var(--border); margin: 32px 0; }
+        
+        /* Table Styles for Markdown */
+        .md-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .md-content th {
+            text-align: left;
+            padding: 12px;
+            background: var(--surface2);
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .md-content td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔍 Visual QA App</h1>
+        <p>Drop your Figma and Web screenshots below to analyze</p>
+    </header>
+
+    <div class="container">
+        <form id="uploadForm">
+            <div class="upload-grid">
+                <!-- Figma Dropzone -->
+                <div class="dropzone" id="figmaZone" onclick="document.getElementById('figmaFile').click()">
+                    <div class="icon">🎨</div>
+                    <h3>Figma Design</h3>
+                    <p>Click or drag image here</p>
+                    <div class="filename" id="figmaFilename"></div>
+                    <input type="file" id="figmaFile" accept="image/png, image/jpeg" required>
+                </div>
+
+                <!-- Web Dropzone -->
+                <div class="dropzone" id="webZone" onclick="document.getElementById('webFile').click()">
+                    <div class="icon">🌐</div>
+                    <h3>Web Screenshot</h3>
+                    <p>Click or drag image here</p>
+                    <div class="filename" id="webFilename"></div>
+                    <input type="file" id="webFile" accept="image/png, image/jpeg" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-analyze" id="analyzeBtn">Run Visual Analysis 🚀</button>
+        </form>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <h3>Analyzing Pixels & Running AI...</h3>
+            <p>This usually takes 10-15 seconds</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="result-card">
+                <h2>🔥 Visual Diff & SSIM</h2>
+                <p>SSIM Match Score: <strong id="ssimScore" style="color: var(--accent); font-size: 1.2rem;"></strong></p>
+                
+                <div class="image-comparison-grid">
+                    <div>
+                        <h4>Figma Design</h4>
+                        <img id="outFigmaImg" alt="Figma Design">
+                    </div>
+                    <div>
+                        <h4>Web Screenshot</h4>
+                        <img id="outWebImg" alt="Web Screenshot">
+                    </div>
+                    <div>
+                        <h4>Diff Heatmap</h4>
+                        <img id="heatmapImg" alt="Diff Heatmap">
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="md-content" id="markdownReport"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle file selection display
+        document.getElementById('figmaFile').addEventListener('change', (e) => {
+            if(e.target.files[0]) document.getElementById('figmaFilename').textContent = e.target.files[0].name;
+        });
+        document.getElementById('webFile').addEventListener('change', (e) => {
+            if(e.target.files[0]) document.getElementById('webFilename').textContent = e.target.files[0].name;
+        });
+
+        // Handle Form Submit
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const figmaFile = document.getElementById('figmaFile').files[0];
+            const webFile = document.getElementById('webFile').files[0];
+            
+            if (!figmaFile || !webFile) {
+                alert("Please select both images!");
+                return;
+            }
+
+            // UI State updates
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('figma_image', figmaFile);
+            formData.append('web_image', webFile);
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Server error");
+                }
+
+                const data = await response.json();
+
+                // Populate Results
+                document.getElementById('ssimScore').textContent = (data.ssim_score * 100).toFixed(1) + "%";
+                document.getElementById('heatmapImg').src = "data:image/png;base64," + data.heatmap_b64;
+                
+                // Show uploaded images instantly
+                document.getElementById('outFigmaImg').src = URL.createObjectURL(figmaFile);
+                document.getElementById('outWebImg').src = URL.createObjectURL(webFile);
+
+                document.getElementById('markdownReport').innerHTML = marked.parse(data.markdown_report);
+
+                // Show Results
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+            } catch (error) {
+                alert("Error: " + error.message);
+                document.getElementById('loader').style.display = 'none';
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
