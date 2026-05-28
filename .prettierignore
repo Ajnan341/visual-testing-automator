@@ -1,0 +1,3 @@
+# Prevent Prettier from reformatting Jinja2 templates
+# (Prettier breaks {{ }} syntax inside <style> blocks)
+visual-testing-agent/reporting/templates/
